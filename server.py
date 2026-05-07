@@ -42,11 +42,15 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleW
 
 
 def clean_text(text):
-    """Remove HTML tags and clean whitespace"""
+    """Remove HTML tags, clean whitespace, and remove characters that break JSON"""
     if not text:
         return ""
     soup = BeautifulSoup(text, "html.parser")
-    return re.sub(r'\s+', ' ', soup.get_text()).strip()
+    text = soup.get_text()
+    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
+    text = text.replace('\u2028', ' ').replace('\u2029', ' ')
+    return text.strip()
 
 
 def fetch_rss_feed(feed, hours=28):
