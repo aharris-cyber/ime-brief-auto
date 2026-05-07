@@ -26,8 +26,8 @@ NEWS_FEEDS = [
     {"name": "Israel Hayom",        "url": "https://www.israelhayom.com/feed/"},
     {"name": "i24 News",            "url": "https://www.i24news.tv/en/rss"},
     {"name": "Al-Monitor",          "url": "https://www.al-monitor.com/rss"},
-    {"name": "Reuters",             "url": "https://feeds.reuters.com/reuters/worldNews"},
-    {"name": "AP",                  "url": "https://rsshub.app/apnews/topics/israel"},
+    {"name": "Reuters",             "url": "https://feeds.reuters.com/Reuters/worldNews"},
+    {"name": "AP",                  "url": "https://apnews.com/hub/mideast-wars.rss"},
     {"name": "Axios",               "url": "https://api.axios.com/feed/"},
 ]
 
@@ -42,15 +42,11 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleW
 
 
 def clean_text(text):
-    """Remove HTML tags, clean whitespace, and remove characters that break JSON"""
+    """Remove HTML tags and clean whitespace"""
     if not text:
         return ""
     soup = BeautifulSoup(text, "html.parser")
-    text = soup.get_text()
-    text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
-    text = text.replace('\u2028', ' ').replace('\u2029', ' ')
-    return text.strip()
+    return re.sub(r'\s+', ' ', soup.get_text()).strip()
 
 
 def fetch_rss_feed(feed, hours=28):
@@ -72,11 +68,8 @@ def fetch_rss_feed(feed, hours=28):
                         pass
                     break
 
-        if pub and pub < cutoff:
-    continue
-# Skip if no content
-if not title:
-    continue
+            if pub and pub < cutoff:
+                continue
 
             title = clean_text(entry.get("title", ""))
             url = entry.get("link", "")
@@ -183,11 +176,11 @@ def fetch():
     # 1. Pull all RSS feeds
     all_news = []
     for feed in NEWS_FEEDS:
-        all_news.extend(fetch_rss_feed(feed, hours=72))
+        all_news.extend(fetch_rss_feed(feed, hours=28))
 
     all_com = []
     for feed in COMMENTARY_FEEDS:
-        all_com.extend(fetch_rss_feed(feed, hours=72))
+        all_com.extend(fetch_rss_feed(feed, hours=52))
 
     # 2. Claude picks best articles
     news_selected = claude_select(all_news, "news", 12)
