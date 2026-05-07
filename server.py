@@ -139,7 +139,8 @@ def claude_select(articles, kind, max_items):
     lines = "\n".join(f"{i+1}. [{a['source']}] {a['title']}" for i, a in enumerate(articles))
     prompt = (
         f"From the list of {'news headlines' if kind == 'news' else 'opinion/commentary pieces'} below, "
-        f"select the {max_items} most significant and relevant to Israel and the Middle East today. "
+        f"select up to {max_items} articles relevant to Israel, the Middle East, Iran, Gaza, Lebanon, or related geopolitics. "
+        f"Try to include articles from a VARIETY of different sources — do not pick more than 3 articles from the same source. "
         f"Ignore duplicates. Return ONLY a JSON array of 1-based index numbers like [1, 5, 8]. No other text.\n\n{lines}"
     )
     try:
