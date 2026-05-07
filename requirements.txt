@@ -4,6 +4,6 @@ anthropic>=0.40.0
 feedparser==6.0.11
 requests==2.31.0
 beautifulsoup4==4.12.3
-trafilatura==1.12.0
+trafilatura>=1.12.0
 gunicorn==21.2.0
-lxml==5.2.1
+lxml>=5.2.2
