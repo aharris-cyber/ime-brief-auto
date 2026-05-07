@@ -42,7 +42,6 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleW
 
 
 def clean_text(text):
-    """Remove HTML tags, clean whitespace, strip characters that break JSON"""
     if not text:
         return ""
     soup = BeautifulSoup(text, "html.parser")
@@ -56,15 +55,12 @@ def clean_text(text):
     return text.strip()
 
 
-def fetch_rss_feed(feed, hours=28):
-    """Fetch articles from an RSS feed published in the last N hours"""
+def fetch_rss_feed(feed, hours=72):
     articles = []
     try:
         parsed = feedparser.parse(feed["url"])
         cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
-
         for entry in parsed.entries[:30]:
-            # Parse date
             pub = None
             for f in ["published_parsed", "updated_parsed"]:
                 val = getattr(entry, f, None)
@@ -74,14 +70,11 @@ def fetch_rss_feed(feed, hours=28):
                     except Exception:
                         pass
                     break
-
             if pub and pub < cutoff:
                 continue
-
             title = clean_text(entry.get("title", ""))
             url = entry.get("link", "")
             summary = clean_text(entry.get("summary", ""))[:600]
-
             if title and url:
                 articles.append({
                     "title": title,
@@ -98,7 +91,6 @@ def fetch_rss_feed(feed, hours=28):
 
 
 def scrape_sentences(url, num=3):
-    """Extract verbatim opening sentences using trafilatura"""
     try:
         resp = requests.get(url, headers=HEADERS, timeout=12)
         if resp.status_code != 200:
@@ -112,25 +104,22 @@ def scrape_sentences(url, num=3):
         )
         if not text:
             return ""
-        # Split into sentences naively and take first N
         parts = re.split(r'(?<=[.!?])\s+', text.strip())
         sentences = " ".join(parts[:num]).strip()
-        return sentences
+        return clean_text(sentences)
     except Exception as e:
         print(f"Scrape error [{url}]: {e}")
         return ""
 
 
 def scrape_author(url):
-    """Try to extract author name from article page"""
     try:
         resp = requests.get(url, headers=HEADERS, timeout=12)
         if resp.status_code != 200:
             return ""
         meta = trafilatura.extract_metadata(resp.text)
         if meta and meta.author:
-            return meta.author.strip()
-        # Fallback: look for byline in HTML
+            return clean_text(meta.author)
         soup = BeautifulSoup(resp.content, "html.parser")
         for sel in ['[class*="author"]', '[rel="author"]', '[class*="byline"]', 'meta[name="author"]']:
             el = soup.select_one(sel)
@@ -145,7 +134,6 @@ def scrape_author(url):
 
 
 def claude_select(articles, kind, max_items):
-    """Ask Claude to pick the most relevant Israel/Middle East articles"""
     if not articles:
         return []
     lines = "\n".join(f"{i+1}. [{a['source']}] {a['title']}" for i, a in enumerate(articles))
@@ -170,11 +158,13 @@ def claude_select(articles, kind, max_items):
     return articles[:max_items]
 
 
-# ── Routes ──────────────────────────────────────────────────────────────────
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
+
 
 @app.route("/debug-feeds")
 def debug_feeds():
-    """Test all RSS feeds and report which ones are working"""
     results = []
     all_feeds = NEWS_FEEDS + COMMENTARY_FEEDS
     for feed in all_feeds:
@@ -199,27 +189,22 @@ def debug_feeds():
 
 @app.route("/fetch", methods=["POST"])
 def fetch():
-    """Fetch, select, and scrape today's articles"""
-    # 1. Pull all RSS feeds
     all_news = []
     for feed in NEWS_FEEDS:
-        all_news.extend(fetch_rss_feed(feed, hours=28))
+        all_news.extend(fetch_rss_feed(feed, hours=72))
 
     all_com = []
     for feed in COMMENTARY_FEEDS:
-        all_com.extend(fetch_rss_feed(feed, hours=52))
+        all_com.extend(fetch_rss_feed(feed, hours=72))
 
-    # 2. Claude picks best articles
     news_selected = claude_select(all_news, "news", 12)
     com_selected = claude_select(all_com, "commentary", 4)
 
-    # 3. Scrape verbatim opening sentences for news
     for art in news_selected:
         sentences = scrape_sentences(art["url"])
         art["sentences"] = sentences if sentences else art["summary"]
         art["sentences_source"] = "scraped" if sentences else "rss_summary"
 
-    # 4. Scrape author for commentary
     for art in com_selected:
         art["author"] = scrape_author(art["url"])
 
@@ -232,16 +217,14 @@ def fetch():
 
 @app.route("/generate", methods=["POST"])
 def generate():
-    """Build the three Mailchimp HTML blocks from selected articles"""
     data = request.json
     date = data.get("date", "")
     headlines = data.get("headlines", [])
     commentary = data.get("commentary", [])
 
-    # ── Block 1: Content TOC (plain text, no links) ──────────────────────
     hl_items = ""
     for h in headlines:
-        t = h["title"].replace('"', '&quot;')
+        t = clean_text(h["title"])
         hl_items += (
             f'<li style="text-align:left;">'
             f'<p style="text-align:left;">'
@@ -252,8 +235,8 @@ def generate():
 
     com_items = ""
     for c in commentary:
-        t = c["title"].replace('"', '&quot;')
-        author = c.get("author", "[Author]")
+        t = clean_text(c["title"])
+        author = clean_text(c.get("author", "[Author]"))
         com_items += (
             f'<li><p class="" style="text-align:left;">'
             f'<strong><span style="font-size:18px">'
@@ -271,11 +254,10 @@ def generate():
         f'</span></strong></p>\n<ul>\n{com_items}</ul>'
     )
 
-    # ── Block 2: Headlines with sentences ────────────────────────────────
     block2 = ""
     for h in headlines:
-        t = h["title"].replace('"', '&quot;')
-        sentences = h.get("sentences", "").strip()
+        t = clean_text(h["title"])
+        sentences = clean_text(h.get("sentences", ""))
         source = h.get("source", "")
         block2 += (
             f'<p style="line-height:0;mso-line-height-alt:0%;"></p>\n'
@@ -286,11 +268,10 @@ def generate():
             f'<p style="text-align:left;"></p>\n\n'
         )
 
-    # ── Block 3: Commentary ───────────────────────────────────────────────
     block3 = ""
     for c in commentary:
-        t = c["title"].replace('"', '&quot;')
-        author = c.get("author", "[Author]")
+        t = clean_text(c["title"])
+        author = clean_text(c.get("author", "[Author]"))
         source = c.get("source", "")
         block3 += (
             f'<p style="text-align:left;">'
@@ -312,7 +293,6 @@ def generate():
 
 @app.route("/mailchimp", methods=["POST"])
 def mailchimp():
-    """Create a Mailchimp campaign draft with the newsletter content"""
     data = request.json
     api_key = data.get("apiKey", "")
     list_id = data.get("listId", "")
