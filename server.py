@@ -214,8 +214,8 @@ def fetch():
     for feed in COMMENTARY_FEEDS:
         all_com.extend(fetch_rss_feed(feed, hours=72))
 
-    news_selected = select_articles(all_news, 12)
-    com_selected = select_articles(all_com, 4)
+    news_selected = select_articles(all_news, 36)
+    com_selected = select_articles(all_com, 12)
 
     for art in news_selected:
         sentences = scrape_sentences(art["url"])
