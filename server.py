@@ -20,14 +20,14 @@ SUB_URL = "https://mailchi.mp/cce5b43af537/subscribe-to-ime-brief"
 NEWS_FEEDS = [
     {"name": "Jerusalem Post",      "url": "https://www.jpost.com/rss/rssfeedsfrontpage.aspx"},
     {"name": "Times of Israel",     "url": "https://www.timesofisrael.com/feed/"},
-    {"name": "Haaretz",             "url": "https://www.haaretz.com/arc/outboundfeeds/rss/"},
-    {"name": "Arutz Sheva",         "url": "https://www.israelnationalnews.com/Rss.aspx/1000"},
     {"name": "Ynet News",           "url": "https://www.ynetnews.com/Integration/StoryRss3082.xml"},
     {"name": "Israel Hayom",        "url": "https://www.israelhayom.com/feed/"},
-    {"name": "i24 News",            "url": "https://www.i24news.tv/en/rss"},
     {"name": "Al-Monitor",          "url": "https://www.al-monitor.com/rss"},
-    {"name": "Reuters",             "url": "https://feeds.reuters.com/Reuters/worldNews"},
-    {"name": "AP",                  "url": "https://apnews.com/hub/mideast-wars.rss"},
+    {"name": "Haaretz",             "url": "https://www.haaretz.com/arc/outboundfeeds/rss/section/israel-news"},
+    {"name": "Arutz Sheva",         "url": "https://www.israelnationalnews.com/Rss.aspx/1014"},
+    {"name": "i24 News",            "url": "https://www.i24news.tv/en/rss/i24news"},
+    {"name": "Reuters",             "url": "https://feeds.reuters.com/reuters/topNews"},
+    {"name": "AP",                  "url": "https://feeds.apnews.com/apnews/topnews"},
     {"name": "Axios",               "url": "https://api.axios.com/feed/"},
 ]
 
