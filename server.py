@@ -172,9 +172,29 @@ def claude_select(articles, kind, max_items):
 
 # ── Routes ──────────────────────────────────────────────────────────────────
 
-@app.route("/health")
-def health():
-    return jsonify({"status": "ok"})
+@app.route("/debug-feeds")
+def debug_feeds():
+    """Test all RSS feeds and report which ones are working"""
+    results = []
+    all_feeds = NEWS_FEEDS + COMMENTARY_FEEDS
+    for feed in all_feeds:
+        try:
+            parsed = feedparser.parse(feed["url"])
+            count = len(parsed.entries)
+            first = parsed.entries[0].get("title", "no title") if count > 0 else "no entries"
+            results.append({
+                "name": feed["name"],
+                "status": "ok",
+                "articles": count,
+                "first_title": first[:80]
+            })
+        except Exception as e:
+            results.append({
+                "name": feed["name"],
+                "status": "error",
+                "error": str(e)
+            })
+    return jsonify(results)
 
 
 @app.route("/fetch", methods=["POST"])
