@@ -179,6 +179,42 @@ def select_articles(articles, max_items):
 def health():
     return jsonify({"status": "ok"})
 
+@app.route("/fetch-urls", methods=["POST"])
+def fetch_urls():
+    """Fetch title and author from a list of URLs (for manual commentary entry)"""
+    data = request.json
+    urls = data.get("urls", [])
+    results = []
+    for url in urls:
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=12)
+            if resp.status_code == 200:
+                meta = trafilatura.extract_metadata(resp.text)
+                title = clean_text(meta.title) if meta and meta.title else ""
+                author = clean_text(meta.author) if meta and meta.author else ""
+                # Get source from domain
+                from urllib.parse import urlparse
+                domain = urlparse(url).netloc.replace("www.", "").replace("blogs.", "")
+                source_map = {
+                    "jpost.com": "Jerusalem Post",
+                    "timesofisrael.com": "Times of Israel",
+                    "israelhayom.com": "Israel Hayom",
+                    "ynetnews.com": "Ynet News",
+                    "haaretz.com": "Haaretz",
+                    "israelnationalnews.com": "Arutz Sheva",
+                    "i24news.tv": "i24 News",
+                    "al-monitor.com": "Al-Monitor",
+                    "reuters.com": "Reuters",
+                    "apnews.com": "AP",
+                    "axios.com": "Axios",
+                }
+                source = source_map.get(domain, domain)
+                results.append({"url": url, "title": title, "author": author, "source": source, "included": True})
+            else:
+                results.append({"url": url, "title": "", "author": "", "source": "", "included": True})
+        except Exception as e:
+            results.append({"url": url, "title": "", "author": "", "source": "", "included": True})
+    return jsonify(results)
 
 @app.route("/debug-feeds")
 def debug_feeds():
