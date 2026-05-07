@@ -26,8 +26,8 @@ NEWS_FEEDS = [
     {"name": "Israel Hayom",        "url": "https://www.israelhayom.com/feed/"},
     {"name": "i24 News",            "url": "https://www.i24news.tv/en/rss"},
     {"name": "Al-Monitor",          "url": "https://www.al-monitor.com/rss"},
-    {"name": "Reuters",             "url": "https://feeds.reuters.com/Reuters/worldNews"},
-    {"name": "AP",                  "url": "https://apnews.com/hub/mideast-wars.rss"},
+    {"name": "Reuters",             "url": "https://feeds.reuters.com/reuters/worldNews"},
+    {"name": "AP",                  "url": "https://rsshub.app/apnews/topics/israel"},
     {"name": "Axios",               "url": "https://api.axios.com/feed/"},
 ]
 
@@ -72,8 +72,11 @@ def fetch_rss_feed(feed, hours=28):
                         pass
                     break
 
-            if pub and pub < cutoff:
-                continue
+        if pub and pub < cutoff:
+    continue
+# Skip if no content
+if not title:
+    continue
 
             title = clean_text(entry.get("title", ""))
             url = entry.get("link", "")
@@ -180,11 +183,11 @@ def fetch():
     # 1. Pull all RSS feeds
     all_news = []
     for feed in NEWS_FEEDS:
-        all_news.extend(fetch_rss_feed(feed, hours=28))
+        all_news.extend(fetch_rss_feed(feed, hours=72))
 
     all_com = []
     for feed in COMMENTARY_FEEDS:
-        all_com.extend(fetch_rss_feed(feed, hours=52))
+        all_com.extend(fetch_rss_feed(feed, hours=72))
 
     # 2. Claude picks best articles
     news_selected = claude_select(all_news, "news", 12)
