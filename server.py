@@ -133,16 +133,32 @@ def scrape_author(url):
     return ""
 
 
-def claude_select(articles, kind, max_items):
-    if not articles:
-        return []
-    lines = "\n".join(f"{i+1}. [{a['source']}] {a['title']}" for i, a in enumerate(articles))
-    prompt = (
-        f"From the list of {'news headlines' if kind == 'news' else 'opinion/commentary pieces'} below, "
-        f"select up to {max_items} articles relevant to Israel, the Middle East, Iran, Gaza, Lebanon, or related geopolitics. "
-        f"Try to include articles from a VARIETY of different sources — do not pick more than 3 articles from the same source. "
-        f"Ignore duplicates. Return ONLY a JSON array of 1-based index numbers like [1, 5, 8]. No other text.\n\n{lines}"
-    )
+def select_articles(articles, max_items):
+    """Take top articles from each source to ensure variety"""
+    by_source = {}
+    for a in articles:
+        source = a["source"]
+        if source not in by_source:
+            by_source[source] = []
+        by_source[source].append(a)
+    
+    selected = []
+    per_source = max(1, max_items // len(by_source)) if by_source else 1
+    
+    # Take up to per_source articles from each source
+    for source, arts in by_source.items():
+        selected.extend(arts[:per_source])
+    
+    # If we still have room, add more from larger sources
+    if len(selected) < max_items:
+        for source, arts in by_source.items():
+            for art in arts[per_source:]:
+                if len(selected) >= max_items:
+                    break
+                if art not in selected:
+                    selected.append(art)
+    
+    return selected[:max_items]
     try:
         resp = client.messages.create(
             model="claude-haiku-4-5-20251001",
@@ -198,8 +214,8 @@ def fetch():
     for feed in COMMENTARY_FEEDS:
         all_com.extend(fetch_rss_feed(feed, hours=72))
 
-    news_selected = claude_select(all_news, "news", 12)
-    com_selected = claude_select(all_com, "commentary", 4)
+    news_selected = select_articles(all_news, 12)
+    com_selected = select_articles(all_com, 4)
 
     for art in news_selected:
         sentences = scrape_sentences(art["url"])
