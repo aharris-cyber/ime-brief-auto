@@ -18,24 +18,24 @@ client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 SUB_URL = "https://mailchi.mp/cce5b43af537/subscribe-to-ime-brief"
 
 NEWS_FEEDS = [
-    {"name": "Jerusalem Post",      "url": "https://www.jpost.com/rss/rssfeedsfrontpage.aspx"},
-    {"name": "Times of Israel",     "url": "https://www.timesofisrael.com/feed/"},
-    {"name": "Ynet News",           "url": "https://www.ynetnews.com/Integration/StoryRss3082.xml"},
-    {"name": "Israel Hayom",        "url": "https://www.israelhayom.com/feed/"},
-    {"name": "Al-Monitor",          "url": "https://www.al-monitor.com/rss"},
-    {"name": "Haaretz",             "url": "https://www.haaretz.com/arc/outboundfeeds/rss/section/israel-news"},
-    {"name": "Arutz Sheva",         "url": "https://www.israelnationalnews.com/Rss.aspx/1014"},
-    {"name": "i24 News",            "url": "https://www.i24news.tv/en/rss/i24news"},
-    {"name": "Reuters",             "url": "https://feeds.reuters.com/reuters/topNews"},
-    {"name": "AP",                  "url": "https://feeds.apnews.com/apnews/topnews"},
-    {"name": "Axios",               "url": "https://api.axios.com/feed/"},
+    {"name": "Jerusalem Post",  "url": "https://www.jpost.com/rss/rssfeedsfrontpage.aspx"},
+    {"name": "Ynet News",       "url": "https://www.ynetnews.com/Integration/StoryRss3082.xml"},
+    {"name": "Israel Hayom",    "url": "https://www.israelhayom.com/feed/"},
+    {"name": "Al-Monitor",      "url": "https://www.al-monitor.com/rss"},
+    {"name": "Times of Israel", "url": "https://news.google.com/rss/search?q=site:timesofisrael.com&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "Haaretz",         "url": "https://news.google.com/rss/search?q=site:haaretz.com+Israel&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "Arutz Sheva",     "url": "https://news.google.com/rss/search?q=site:israelnationalnews.com&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "i24 News",        "url": "https://news.google.com/rss/search?q=site:i24news.tv+Israel&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "Reuters",         "url": "https://news.google.com/rss/search?q=Israel+Middle+East+site:reuters.com&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "AP",              "url": "https://news.google.com/rss/search?q=Israel+Middle+East+site:apnews.com&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "Axios",           "url": "https://news.google.com/rss/search?q=Israel+Middle+East+site:axios.com&hl=en-US&gl=US&ceid=US:en"},
 ]
 
 COMMENTARY_FEEDS = [
-    {"name": "Jerusalem Post Opinion",    "url": "https://www.jpost.com/rss/rssfeedsopinion.aspx"},
-    {"name": "Ynet Opinions",             "url": "https://www.ynetnews.com/Integration/StoryRss3084.xml"},
-    {"name": "Times of Israel Blogs",     "url": "https://blogs.timesofisrael.com/feed/"},
-    {"name": "Israel Hayom Opinions",     "url": "https://www.israelhayom.com/opinions/feed/"},
+    {"name": "Jerusalem Post Opinion",  "url": "https://www.jpost.com/rss/rssfeedsopinion.aspx"},
+    {"name": "Ynet Opinions",           "url": "https://www.ynetnews.com/Integration/StoryRss3084.xml"},
+    {"name": "Israel Hayom Opinions",   "url": "https://www.israelhayom.com/opinions/feed/"},
+    {"name": "Times of Israel Blogs",   "url": "https://news.google.com/rss/search?q=site:blogs.timesofisrael.com&hl=en-US&gl=US&ceid=US:en"},
 ]
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
