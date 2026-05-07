@@ -181,9 +181,9 @@ def health():
 
 @app.route("/fetch-urls", methods=["POST"])
 def fetch_urls():
-    """Fetch title and author from a list of URLs (for manual commentary entry)"""
     data = request.json
     urls = data.get("urls", [])
+    fetch_sentences = data.get("fetch_sentences", False)
     results = []
     for url in urls:
         try:
@@ -192,28 +192,27 @@ def fetch_urls():
                 meta = trafilatura.extract_metadata(resp.text)
                 title = clean_text(meta.title) if meta and meta.title else ""
                 author = clean_text(meta.author) if meta and meta.author else ""
-                # Get source from domain
+                sentences = ""
+                if fetch_sentences:
+                    text = trafilatura.extract(resp.text, include_comments=False, include_tables=False, favor_precision=True, no_fallback=False)
+                    if text:
+                        parts = re.split(r'(?<=[.!?])\s+', text.strip())
+                        sentences = clean_text(" ".join(parts[:3]).strip())
                 from urllib.parse import urlparse
                 domain = urlparse(url).netloc.replace("www.", "").replace("blogs.", "")
                 source_map = {
-                    "jpost.com": "Jerusalem Post",
-                    "timesofisrael.com": "Times of Israel",
-                    "israelhayom.com": "Israel Hayom",
-                    "ynetnews.com": "Ynet News",
-                    "haaretz.com": "Haaretz",
-                    "israelnationalnews.com": "Arutz Sheva",
-                    "i24news.tv": "i24 News",
-                    "al-monitor.com": "Al-Monitor",
-                    "reuters.com": "Reuters",
-                    "apnews.com": "AP",
-                    "axios.com": "Axios",
+                    "jpost.com": "Jerusalem Post", "timesofisrael.com": "Times of Israel",
+                    "israelhayom.com": "Israel Hayom", "ynetnews.com": "Ynet News",
+                    "haaretz.com": "Haaretz", "israelnationalnews.com": "Arutz Sheva",
+                    "i24news.tv": "i24 News", "al-monitor.com": "Al-Monitor",
+                    "reuters.com": "Reuters", "apnews.com": "AP", "axios.com": "Axios",
                 }
                 source = source_map.get(domain, domain)
-                results.append({"url": url, "title": title, "author": author, "source": source, "included": True})
+                results.append({"url": url, "title": title, "author": author, "source": source, "sentences": sentences, "included": True})
             else:
-                results.append({"url": url, "title": "", "author": "", "source": "", "included": True})
+                results.append({"url": url, "title": "", "author": "", "source": "", "sentences": "", "included": True})
         except Exception as e:
-            results.append({"url": url, "title": "", "author": "", "source": "", "included": True})
+            results.append({"url": url, "title": "", "author": "", "source": "", "sentences": "", "included": True})
     return jsonify(results)
 
 @app.route("/debug-feeds")
@@ -302,6 +301,7 @@ def generate():
         f'<p class="" style="text-align:center;"><strong><span style="font-size:18px">'
         f'<span style="font-family:Arial,\'Helvetica Neue\',Helvetica,sans-serif">Headlines</span>'
         f'</span></strong></p>\n<ul>\n{hl_items}</ul>\n'
+        f'<p style="text-align:left;"></p>\n'
         f'<p class="" style="text-align:center;"><strong><span style="font-size:18px">'
         f'<span style="font-family:Arial,\'Helvetica Neue\',Helvetica,sans-serif">Commentary</span>'
         f'</span></strong></p>\n<ul>\n{com_items}</ul>'
