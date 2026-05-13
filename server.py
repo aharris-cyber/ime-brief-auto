@@ -46,12 +46,19 @@ def clean_text(text):
         return ""
     soup = BeautifulSoup(text, "html.parser")
     text = soup.get_text()
+    # Normalize whitespace
     text = re.sub(r'\s+', ' ', text)
-    text = text.replace('\u2028', ' ')
-    text = text.replace('\u2029', ' ')
-    text = text.replace('\r', ' ')
-    text = ''.join(c for c in text if ord(c) >= 32 or c == '\n')
+    # Remove line separators
+    text = text.replace('\u2028', ' ').replace('\u2029', ' ')
+    text = text.replace('\r', ' ').replace('\n', ' ')
+    # Remove control characters
+    text = ''.join(c for c in text if ord(c) >= 32)
+    # Remove characters that break JSON encoding
     text = text.encode('utf-8', errors='ignore').decode('utf-8')
+    # Remove any remaining problematic characters
+    text = re.sub(r'[\x00-\x1f\x7f\x80-\x9f]', '', text)
+    # Escape any stray backslashes and quotes that could break JSON
+    text = text.replace('\\', ' ').replace('\x00', '')
     return text.strip()
 
 
@@ -77,10 +84,10 @@ def fetch_rss_feed(feed, hours=72):
             summary = clean_text(entry.get("summary", ""))[:600]
             if title and url:
                 articles.append({
-                    "title": title,
-                    "url": url,
+                    "title": clean_text(title),
+                    "url": url.strip(),
                     "source": feed["name"],
-                    "summary": summary,
+                    "summary": clean_text(summary),
                     "sentences": "",
                     "author": "",
                     "selected": False,
