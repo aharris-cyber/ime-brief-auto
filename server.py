@@ -220,7 +220,25 @@ def fetch_urls():
                 results.append({"url": url, "title": "", "author": "", "source": "", "sentences": "", "included": True})
         except Exception as e:
             results.append({"url": url, "title": "", "author": "", "source": "", "sentences": "", "included": True})
-    return jsonify(results)
+            # Sanitize all fields before returning
+    for art in news_selected:
+        for key in ['title', 'url', 'source', 'summary', 'sentences', 'author']:
+            if key in art:
+                art[key] = clean_text(str(art[key]))
+    for art in com_selected:
+        for key in ['title', 'url', 'source', 'summary', 'sentences', 'author']:
+            if key in art:
+                art[key] = clean_text(str(art[key]))
+    from flask import Response
+    response_data = {
+        "news": news_selected,
+        "commentary": com_selected,
+        "fetched_at": datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
+    }
+    return Response(
+        json.dumps(response_data, ensure_ascii=True),
+        mimetype='application/json'
+    )
 
 @app.route("/debug-feeds")
 def debug_feeds():
